@@ -45,3 +45,46 @@
     
 针对每个参数， `=` 表示如果调用者未对参数赋值时的默认值。所以，`animalSentence()` 会返回 `"Lions and tigers and bears! Oh my!", animalSentence("elephants") returns "Lions and elephants and bears! Oh my!", and animalSentence("elephants", "whales") returns "Lions and elephants and whales! Oh my!"`。  
 
+关于默认参数有下面几个细节：  
+
+* 并不像 python，**默认值表达式是从左到右执行**。这同时表明该表达式中，可以使用左边带默认值的变量来赋值。例如：  
+
+        function animalSentenceFancy(animals2="tigers",
+            animals3=(animals2 == "bears") ? "sealions" : "bears")
+        {
+          return `Lions and ${animals2} and ${animals3}! Oh my!`;
+        }
+ 
+ 那么，`animalSentenceFancy("bears")` 则会返回 `"Lions and bears and sealions. Oh my!"`。  
+ 
+* 显式的传 undefined 的参数等同于未传递任何值。这样，animalSentence(undefined, "unicorns") 返回为 "Lions and tigers and unicorns! Oh my!"。  
+ 
+* 无默认值的参数，默认值则为 undefined，所以：  
+ 
+         function myFunc(a=42, b) {...}  
+       
+     等同于 ： 
+     
+          function myFunc(a=42, b=undefined) {...}  
+          
+###是时候放弃 arguments 了  
+
+可变参数及默认参数可以取代 arguments 的使用，使代码更易读。出了生涩难懂，arguments 最臭名昭著的还是 [headaches for optimizing JavaScript VMs](https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments)。  
+
+可变参数及默认参数有望替代 arguments。首先函数如果使用可变参数或者默认参数，则被禁止使用 arguments，arguments 短期并不会被移除，但还是推荐使用可变参数及默认参数。  
+
+###浏览器支持  
+
+firefox 15+ 支持。  
+
+遗憾的是，其他浏览器均不支持此特性。[V8 最近添加了支持](https://code.google.com/p/v8/issues/detail?id=2159) , 且 [这里](https://code.google.com/p/v8/issues/detail?id=2160) 有关于默认参数实现的 issue。JSC 同样也有关于 [可变参数](https://bugs.webkit.org/show_bug.cgi?id=38408) 及 [默认参数](https://bugs.webkit.org/show_bug.cgi?id=38409) 的 issues。  
+
+Babel 和 Traceur 编译器都支持了默认参数， 可以今天就开始使用。  
+
+###总结  
+
+尽管技术上来说并没有新的行为，可变参数及默认参数使得 Javascript 函数更易于表达和可读。好样的！  
+
+> 备注：感谢 Benjamin Peterson 在 firefox 里实现此特性， 同样感谢他对该项目的贡献，以及本篇文章。  
+
+下周将介绍 ES6 里一个简单, 优雅, 实用, 每天都会用的特性。语法类似数组或对象，只不过需要放在等号之前，构造一种简明的方式来拆解数组跟对象， 什么意思？ 为什么拆解对象？欢迎下周继续。
