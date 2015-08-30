@@ -268,3 +268,14 @@ Destructuring 赋值能够绑定变量到对象的不同属性上。你需要指
 
 ###总结  
 
+正如你所看到的，destructuring 在许多小的场景下很实用。在 Mozilla 我们用它做了许多实验。Lars Hansen 十年前就在 Opera 浏览器里提出了 Js destructuring 的概念，而 Brendan Eich 稍晚些在 firefox 里也提供了支持。同 firefox 2 正式出现。所以 destructuring 悄悄潜入了我们的日常，让我们的代码更短、更清晰。  
+
+5周前，我提到 ES6 将改变写 Javascript 的方式。类似 destructuring 这种特性：简单的提升，不需要太多学习成本，积少成多，最终影响我们写的每个项目。进化最终造就革命。  
+
+destructuring 特性的持续更新在 ES6 里可以说是团队功劳。特别感谢 Tooru Fujisawa (arai) 和 Arpad Borsos (Swatinem) 的杰出贡献。  
+
+destructuring 目前正在 Chrome 下开发，而其他浏览器最终也都将支持。现在使用它的话，你需要用 Babel 或者 Traceur。  
+
+再次感谢 Nick Fitzgerald 对本篇文章提供支持。  
+
+下周，我将带来 Js 里最基础的，长期在使用的，构造代码块的另一种简化版。你会关心吗？简化版会使得你异常兴奋？我猜答案是 yes，不过别太当真。ES6 的 arrow function, 下周加入我们，来探个究竟。
