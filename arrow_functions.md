@@ -126,3 +126,90 @@ ES6 里这么写：
 
 ###别忘了`This`  
 
+function 跟 arrow function 有轻微不同。**Arrow functions 并没有 this**。如果在内部获取 this，得到的永远是其外部作用域的 this。  
+
+在探索为何如此之前，让我们翻回去看看。  
+
+Javascript 里 this 如何工作？它的值从哪里来？ [三言两语很难解释清楚](http://stackoverflow.com/questions/3127429/how-does-the-this-keyword-work)。如果对你来说很容易，是因为你接触它太长时间。  
+
+其中一个原因是 function 函数会自动返回 this 值， 不管你需要或否。你是否写过类似下面的把戏：  
+
+    {
+      ...
+      addAll: function addAll(pieces) {
+        var self = this;
+        _.each(pieces, function (piece) {
+          self.add(piece);
+        });
+      },
+      ...
+    }  
+    
+在内部的函数，其实我们仅仅需要 this.add(piece)。不幸的是， 内部函数并没有继承外部的 this 值。所以内部的 this 值 将会是 window 或者 undefined。而 self 这个临时变量充当的作用就是把外部的 this 值 传递到内部函数里(另一种方式是通过 .bind(this) 将 this 绑定到内部函数上，两种方式都不那么美观)。  
+
+ES6里，遵循以下规则，那么有关 this 的小把戏基本可以放弃了：  
+
+* 使用非箭头函数，那么它会调用 object.method()，调用者将会得到一个有意义的 this 值。  
+
+* 剩下的场景都用箭头函数。  
+
+        // ES6
+        {
+          ...
+          addAll: function addAll(pieces) {
+            _.each(pieces, piece => this.add(piece));
+          },
+          ...
+        }  
+        
+在 ES6 里，注意到 addAll 方法会从调用者接收 this 值。而内部函数是箭头函数，自然地它会从 addAll 函数继承 this 的值。  
+  
+作为福利，ES6 为对象字面量提供了另一种简写！上述代码可以改写为：  
+
+    // ES6 with method syntax
+    {
+      ...
+      addAll(pieces) {
+        _.each(pieces, piece => this.add(piece));
+      },
+      ...
+    }  
+    
+在方法跟箭头中间，我可能再也不需要输入 function 了，非常有趣。  
+
+箭头函数跟非箭头函数还有轻微的不同：箭头函数并没有 arguments。 当然在 ES6 里， 你可以用可变参数或默认参数替代。  
+
+###用“箭头”戳破计算机科学黑暗的心  
+
+关于箭头函数，我们已探讨了许多实用的技术。还有一种黑科技我想跟你聊聊：揭开计算机内心深处的神秘面纱。实用与否，你自己决断。  
+
+1936年，Alonzo Church 和 Alan Turing 独立开发了非常强大的计算机数学模型。图灵称它为 a-machines, 然而其他人称他为图灵机。Church 写了取代函数，并给它命名为 [ λ-calculus](https://en.wikipedia.org/wiki/Lambda_calculus)。(λ 是希腊字母 lambda 的小写。) 这也是为什么 Lisp 用 LAMBDA 来表示函数，也是今天 lambda 的由来。  
+
+然而，什么是 λ-calculus？  计算模型又是什么？  
+
+几句话很难解释的清楚， 我尝试这样解释：λ-calculus 是最早期的编程语言之一。存储计算机盛行了一二十年，起初它根本不是被设计成编程语言的，而是简单的，定制的纯数学语言，它包含了你需要的所有计算功能。Church 希望能够通过模型强大的运算能力证明一些东西。    
+
+他发现系统只需要一个东西： 函数。  
+
+多么非凡的想法啊。抛去数组数字，if 语句，while 循环，分号，赋值，逻辑运算符，甚至是循环，依然可以造出 Javascript 可以做的计算，需要的仅仅是函数。  
+
+下面是数学家用 Church 的 λ 符号可能写出的程序：  
+
+    fix = λf.(λx.f(λv.x(x)(v)))(λx.f(λv.x(x)(v)))  
+    
+等价于 Javascript 里的：  
+
+    var fix = f => (x => f(v => x(x)(v)))
+                   (x => f(v => x(x)(v)));  
+                   
+Javascript 实际上包含了 λ 微积分的实现， 也就是说 Javascript 拥有 λ-calculus。  
+
+Alonzo Church 和后续研究者对于 λ-calculus 的研究，以及将它无声息的融入每一个主流的编程语言的故事，远远超越了本篇文章的范围。如果你对计算机科学基础有浓厚兴趣，或者想看看一门语言，只用函数来实现类似循环或递归的话，强烈建议你去看看 [Church numerals](https://en.wikipedia.org/wiki/Church_encoding) 和 [fixed-point combinators](https://en.wikipedia.org/wiki/Fixed-point_combinator#Strict_fixed_point_combinator)，并且试着在 firefox console 或者 scratchpad 调试看看。拥有 ES6 箭头函数的 Javascript，称得上是探索 λ-calculus 的最佳语言。  
+
+###什么时候能用？  
+
+2013年，我在 firefox 里实现了 ES6 箭头函数。Jan de Mooij 优化了它。也感谢 Tooru Fujisawa 和 ziyunfei 打的补丁。  
+
+箭头函数同样在 Microsoft Edge 预览版里实现。如果立马想用的话，可以使用 Babel, Traceur, and TypeScript。  
+
+下篇文章关于 ES6 的一个比较奇怪的特性。届时将看到 typeof x 返回焕然一新的值。我们会问：什么时候名字不是字符串？我们会对等价的意义产生疑惑。这会非常的怪异。欢迎下周继续加入我们。  
