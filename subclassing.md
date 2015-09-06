@@ -141,3 +141,96 @@
     var a = obj.toString;
     a(); // MyObject: [object Object]  
     
+###子类内建命令  
+
+你可能想要为 Javascript 内建指令编写扩展。内建数据结构为语言提供很多强大的功能，也够早了许多新类型，使得这些功能变得更实用、更基础，例如子类。假设你想写个带版本控制的数组(我知道，相信我。)你应该提供能够改变数据并提交，以及回滚提交等功能。下面是使用 Array 子类的一种实现：  
+
+    class VersionedArray extends Array {
+        constructor() {
+            super();
+            this.history = [[]];
+        }
+        commit() {
+            // Save changes to history.
+            this.history.push(this.slice());
+        }
+        revert() {
+            this.splice(0, this.length, this.history[this.history.length - 1]);
+        }
+    }
+    
+VersionedArray 的实例对象保存了一些重要的属性。它们完善了 map，filter 跟 sort，属于数组有诚意的实例。  Array.isArray() 将视它们为数组，甚至它们的 length 会自动得到更新。更深远的，返回数组的函数(像 Array.prototype.slice()) 将返回 VersionedArray！  
+
+###派生类构造函数  
+
+你可能注意到了，在最后一个例子构造函数里的 super() 函数，究竟发生了什么？  
+
+传统的类模型中，构造函数用来初始化该类实例对象的任何内部状态。每个子类负责初始化根子类相关的状态。将调用串起来，这样子类就可以共享被扩展类的同样的初始化代码。  
+
+这次我们还是使用 super 关键字来调用父构造函数，然而这次 super 是个函数。注意这种语法仅支持在子类的构造函数中使用。利用 super 关键字，将 Shape 类重写：  
+
+    class Shape {
+        constructor(color) {
+            this._color = color;
+        }
+    }
+
+    class Circle extends Shape {
+        constructor(color, radius) {
+            super(color);
+
+            this.radius = radius;
+        }
+
+        // As from above
+    }  
+    
+Javascript 里，我们倾向于写构造函数来操作 this 对象，插入的属性以及初始化的内部状态。通常当使用 new 调用构造函数，或者在对象的 prototype 属性上使用 Object.create()的同时，this 对象也会被的创建。然而某些内建指令拥有不同的内建对象布局，比如数组在内存中的储存的方式跟普通对象就不太一样。由于想要获取子类内建指令，我们需要使基类的构造函数指定 this 对象。如果是内建的，我们将得到对象的布局，但如果是普通构造函数，我们只能得到默认的 this 对象。  
+
+可能最奇怪的答案莫过于 this 跟子类构造器的绑定方式了。除非运行基类的构造函数，且允许它来指定 this 值，不然我们将得不到 this 值。结果是如果还未调用 super 构造函数之前，获取 this 的值将得到 ReferenceError。  
+
+上篇文章我们了解到你可以省略构造函数，下面的语法可以使得衍生类的构造函数被省略：  
+
+    constructor(...args) {
+        super(...args);
+    }  
+    
+一些时候，构造函数并不需要 this 对象。取而代之，它们构造某些对象，初始化并直接返回。这样情况下就不需要调用 super。父类的构造函数是否被调用，并不影响任何直接返回对象的构造函数。  
+
+###new.target  
+
+使用基类来指定 this 对象的另一个副作用是有些时候基类压根儿不知道该指定哪种类型的对象。假设你正在写一个框架库，想要一个集合类，但是子类中有些是数组，有些却是 maps。那么当执行集合的构造函数时，你没办法知道究竟初始化的是哪种类型的集合！  
+
+既然我们能使用子类，而当执行内部构造函数时，在内部已经能得到原始类的原型。没有它，我们将无法根据合适的实例方法构造对象。为了解决集合这个奇怪的例子，新加入了语法，好让信息暴露给Javascript 代码。我们增加了新的元属性 new.target ，它直接与调用 new 获得的构造函数通信。用 new 的方式调用函数将设置 new.target 为被调用的函数，而调用 super 则会转发 new.target  值。
+
+这不太好理解，所以看个例子：  
+
+```
+class foo {
+    constructor() {
+        return new.target;
+    }
+}
+
+class bar extends foo {
+    // This is included explicitly for clarity. It is not necessary
+    // to get these results.
+    constructor() {
+        super();
+    }
+}
+
+// foo directly invoked, so new.target is foo
+new foo(); // foo
+
+// 1) bar directly invoked, so new.target is bar
+// 2) bar invokes foo via super(), so new.target is still bar
+new bar(); // bar
+```
+
+这样我们就解决了上面集合的问题，因为集合的构造函数可以检查 new.target 的直系来源，也就能够决定使用哪个类型来构造。  
+
+new.target 可以在任何函数里使用，只要不是通过 new 构造的函数，它将被设置为 undefined。  
+
+####两个领域的最佳选择  
+
